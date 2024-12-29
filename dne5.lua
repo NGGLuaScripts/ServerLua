@@ -89,16 +89,21 @@ end
 
 -- Skor senkronizasyonu için yeni fonksiyonlar
 function broadcastScore(driverName, score)
-    ac.sendChatMessage(string.format("DRIFT_SCORE:%s:%d", driverName, math.floor(score)))
+    -- Skor formatını düzelt ve mesajı gönder
+    local message = string.format("DRIFT_SCORE|%s|%d", tostring(driverName), math.floor(score))
+    ac.sendChatMessage(message)
 end
 
 function script.onChatMessage(message, senderCarIndex, senderSessionID)
-    if message:sub(1, 12) == "DRIFT_SCORE:" then
-        local _, driverName, score = message:match("DRIFT_SCORE:([^:]+):(%d+)")
-        if driverName and score then
-            score = tonumber(score)
+    -- DRIFT_SCORE|oyuncuAdı|skor formatında mesaj kontrolü
+    if message:find("DRIFT_SCORE|") then
+        local _, _, driverName, scoreStr = message:find("DRIFT_SCORE|([^|]+)|(%d+)")
+        if driverName and scoreStr then
+            local score = tonumber(scoreStr)
             if score then
+                -- Skoru güncelle ve debug mesajı gönder
                 personalBestScores[driverName] = score
+                ac.debug("Skor güncellendi - Oyuncu: " .. driverName .. ", Skor: " .. score)
             end
         end
     end
@@ -114,9 +119,13 @@ function resetCurrentRunScore()
     if currentRunScore > personalBestScore then
         personalBestScore = math.floor(currentRunScore)
         personalBestScores[playerID] = personalBestScore
+        
         -- Yeni skoru diğer oyunculara bildir
         broadcastScore(playerID, personalBestScore)
-        ac.sendChatMessage("Yeni Kişisel Skor: " .. string.format("%0.0f", personalBestScore):reverse():gsub("(%d%d%d)", "%1."):reverse():gsub("^%.", "") .. " puan!")
+        
+        -- Başarı mesajını gönder
+        local formattedScore = string.format("%0.0f", personalBestScore):reverse():gsub("(%d%d%d)", "%1."):reverse():gsub("^%.", "")
+        ac.sendChatMessage("Yeni Kişisel Skor: " .. formattedScore .. " puan!")
     end
 
     -- Mevcut oyuncunun drift skorlarını sıfırla
@@ -212,6 +221,7 @@ function script.update(dt)
                     -- Eğer mevcut skor kişisel en iyiyi geçtiyse güncelle ve yayınla
                     if currentRunScore > (personalBestScores[driverName] or 0) then
                         personalBestScores[driverName] = math.floor(currentRunScore)
+                        -- Her yeni rekor kırıldığında skoru yayınla
                         broadcastScore(driverName, personalBestScores[driverName])
                     end
                 end
