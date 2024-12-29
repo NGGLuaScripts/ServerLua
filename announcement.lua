@@ -31,8 +31,8 @@ local image_0 = {
 --image_1 is used as the icon
 local image_1 = {
     ['src'] = 'https://cdn.numiezganggarage.com.tr/NggLogo.png',
-    ['sizeX'] = 138,
-    ['sizeY'] = 138,
+    ['sizeX'] = 128,
+    ['sizeY'] = 128,
     ['paddingX'] = 50, --use this to align it, currently 50 pixels from top right
     ['paddingY'] = 50  --use this to align it, currently 50 pixels from top right
 }
